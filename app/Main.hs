@@ -10,27 +10,25 @@ p1Box = 0
 p2Box :: Int
 p2Box = 0
 
-game :: ([Int], [Int], Int, Int, Int) -> ([Int], [Int], Int ,Int, Int) --p1board p2board p1box p2Box, whoseTurn
+game :: ([Int], [Int], Int, Int, Int) -> IO ()
 game (p1Board, p2Board, p1Box, p2Box, whoseTurn) = do
-    putStrLn $"Player {whoseTurn} enter hole number (1-6):"
+    putStrLn ("Player " ++ show whoseTurn ++ " enter hole number (1-6):")
     input <- getLine 
     let hole = read input :: Int 
+    
+    let index = hole - 1 
     putStrLn ("You selected hole: " ++ show hole)
--- first things first
--
+
     if whoseTurn == 1 
         then 
-            if peekPlayersBoard (index, p1board) == 1
-                then game(tupleAdjuster1'(handle1StoneCase1 (p1Board, p2Board, p1Box, index) p2Box))
-
-                else game (tupleAdjuster1 (distStonesP1 p1Board p2Board p1Box (peekPlayersBoard index p1board) hole whoseTurn) p2Box)
+            if peekPlayersBoard (index, p1Board) == 1
+                then game (tupleAdjuster1' (handle1StoneCase1 (p1Board, p2Board, p1Box, index)) p2Box)
+                -- Fonksiyon argümanları tuple olarak geçirilecek şekilde parantezlere alındı
+                else game (tupleAdjuster1 (distStonesP1 (p1Board, p2Board, p1Box, peekPlayersBoard (index, p1Board), index, whoseTurn)) p2Box)
         else 
-            if peekPlayersBoard (index, p2board) == 1
-                then game(tupleAdjuster2'(handle1StoneCase2 (p2Board, p1Board, p2Box, index) p1Box))
-
-                else game (tupleAdjuster2 (distStonesP2 p2Board p1Board p2Box (peekPlayersBoard index p2board) hole whoseTurn) p1Box)
-    where 
-        index = hole - 1
+            if peekPlayersBoard (index, p2Board) == 1
+                then game (tupleAdjuster2' (handle1StoneCase2 (p2Board, p1Board, p2Box, index)) p1Box)
+                else game (tupleAdjuster2 (distStonesP2 (p2Board, p1Board, p2Box, peekPlayersBoard (index, p2Board), index, whoseTurn)) p1Box)
 
 tupleAdjuster1' :: ([Int], Int, Int) -> Int -> ([Int], [Int], Int, Int, Int)
 tupleAdjuster1' (concatList, index, whoseTurn) p2Box = (take 6 concatList, drop 7 concatList, concatList !! 6, p2Box, whoseTurn)
@@ -58,7 +56,7 @@ distStonesP1 (p1Board, p2Board, p1Box, stoneCount, index, whoseTurn)
     = tupleAdjuster''(distribute ((take index p1Board ++ [1] ++ drop (index + 1) p1Board) ++ [p1Box] ++ p2Board, index, 1, stoneCount))
 
 distStonesP2 :: ([Int], [Int], Int, Int, Int, Int) -> ([Int], [Int], Int ,Int, Int, Int) --p2board p1board p2box, stoneCount, index, whoseTurn
-distStonesP2 (p2Board, p1Board, p2Box, stoneCount, index, whoseTrun)
+distStonesP2 (p2Board, p1Board, p2Box, stoneCount, index, whoseTurn)
     = tupleAdjuster''(distribute ((take index p2Board ++ [1] ++ drop (index + 1) p2Board) ++ [p2Box] ++ p1Board, index, 2, stoneCount))
 
 tupleAdjuster'' :: ([Int], Int, Int, Int) -> ([Int], [Int], Int ,Int, Int, Int) -- distStones1 -
@@ -68,7 +66,7 @@ tupleAdjuster'' (concatList, index, whoseTurn, stoneCount) = (take 6 concatList,
 distribute :: ([Int], Int, Int, Int) -> ([Int], Int, Int, Int)  -- concatenated list, index, whoseTurn, stoneCount
 distribute (list, index, whoseTurn, stoneCount)
     | stoneCount == 1 = (first(peekLastStone (list, index, whoseTurn)), second(peekLastStone (list, index, whoseTurn)), third(peekLastStone (list, index, whoseTurn)), stoneCount) -- concat list, index, whoseTurn
-    | otherwise = distribute(take index list ++ [(list !! index) + 1] ++ drop (index + 1) list, index + 1, whoseTurn, stoneCount - 1)
+    | otherwise = distribute(take index list ++ [(list !! index) + 1] ++ drop (index + 1) list, (index + 1) `mod` 13, whoseTurn, stoneCount - 1)
         
 peekLastStone :: ([Int], Int, Int) -> ([Int], Int, Int) -- concat list, index, whoseTurn
 peekLastStone (list, index, whoseTurn) 
