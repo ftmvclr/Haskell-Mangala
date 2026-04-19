@@ -1,5 +1,5 @@
 module Main where
-import Data.Bits (Bits(xor))
+import Data.List (intercalate) 
 
 p1Board :: [Int]
 p1Board = [4,4,4,4,4,4]
@@ -10,76 +10,83 @@ p1Box = 0
 p2Box :: Int
 p2Box = 0
 
-game :: ([Int], [Int], Int, Int, Int) -> ([Int], [Int], Int ,Int, Int) --p1board p2board p1box p2Box, whoseTurn
-game (p1Board, p2Board, p1Box, p2Box, whoseTurn) = do
-    putStrLn $"Player {whoseTurn} enter hole number (1-6):"
+game :: ([Int], [Int], Int, Int, Int) -> IO ([Int], [Int], Int ,Int, Int) --p1board p2board p1box p2Box, whoseTurn
+game (p1B, p2B, p1bx, p2bx, whoseTurn) = do
+    putStrLn "\n--- CURRENT BOARD ---"
+    printBoard p1B p2B p1bx p2bx
+    
+    putStrLn ("Player " ++ show whoseTurn ++ " enter hole number (1-6):")
     input <- getLine 
     let hole = read input :: Int 
     putStrLn ("You selected hole: " ++ show hole)
 -- first things first
--
+
+    let index = hole - 1
+
     if whoseTurn == 1 
         then 
-            if peekPlayersBoard (index, p1board) == 1
-                then game(tupleAdjuster1'(handle1StoneCase1 (p1Board, p2Board, p1Box, index) p2Box))
-
-                else game (tupleAdjuster1 (distStonesP1 p1Board p2Board p1Box (peekPlayersBoard index p1board) hole whoseTurn) p2Box)
+            if peekPlayersBoard (index, p1B) == 1
+                then game (tupleAdjuster1' (handle1StoneCase1 (p1B, p2B, p1bx, index)) p2bx)
+                else game (tupleAdjuster1 (distStonesP1 (p1B, p2B, p1bx, peekPlayersBoard (index, p1B), index, whoseTurn)) p2bx)
         else 
-            if peekPlayersBoard (index, p2board) == 1
-                then game(tupleAdjuster2'(handle1StoneCase2 (p2Board, p1Board, p2Box, index) p1Box))
+            if peekPlayersBoard (index, p2B) == 1
+                then game (tupleAdjuster2' (handle1StoneCase2 (p2B, p1B, p2bx, index)) p1bx)
+                else game (tupleAdjuster2 (distStonesP2 (p2B, p1B, p2bx, peekPlayersBoard (index, p2B), index, whoseTurn)) p1bx)
+    isGameOver p1B p2B 
 
-                else game (tupleAdjuster2 (distStonesP2 p2Board p1Board p2Box (peekPlayersBoard index p2board) hole whoseTurn) p1Box)
-    where 
-        index = hole - 1
+isGameOver :: [Int] -> [Int] -> Bool
+isGameOver p1B p2B = 
+    if sum p1B == 0
+        then
+    else
+    if 
 
 tupleAdjuster1' :: ([Int], Int, Int) -> Int -> ([Int], [Int], Int, Int, Int)
-tupleAdjuster1' (concatList, index, whoseTurn) p2Box = (take 6 concatList, drop 7 concatList, concatList !! 6, p2Box, whoseTurn)
+tupleAdjuster1' (concatList, index, whoseTurn) p2bx = (take 6 concatList, drop 7 concatList, concatList !! 6, p2bx, whoseTurn)
 
 tupleAdjuster2' :: ([Int], Int, Int) -> Int -> ([Int], [Int], Int, Int, Int)
-tupleAdjuster2' (concatList, index, whoseTurn) p1Box = ( drop 7 concatList, take 6 concatList, p1Box, concatList !! 6, whoseTurn)
+tupleAdjuster2' (concatList, index, whoseTurn) p1bx = (drop 7 concatList, take 6 concatList, p1bx, concatList !! 6, whoseTurn)
 
 handle1StoneCase1 :: ([Int], [Int], Int, Int) -> ([Int], Int, Int)
-handle1StoneCase1 (p1Board, p2Board, p1Box, index) = peekLastStone (p1Board ++ [p1Box] ++ p2Board, index, 1)
+handle1StoneCase1 (p1B, p2B, p1bx, index) = peekLastStone (take index p1B ++ [0] ++ drop (index + 1) p1B ++ [p1bx] ++ p2B, index + 1, 1)
 
 handle1StoneCase2 :: ([Int], [Int], Int, Int) -> ([Int], Int, Int) --concatlist index whose
-handle1StoneCase2 (p2Board, p1Board, p2Box, index) = peekLastStone (p2Board ++ [p2Box] ++ p1Board, index, 2)
+handle1StoneCase2 (p2B, p1B, p2bx, index) = peekLastStone (take index p2B ++ [0] ++ drop (index + 1) p2B ++ [p2bx] ++ p1B, index + 1, 2)
 
 peekPlayersBoard :: (Int, [Int]) -> Int
 peekPlayersBoard (index, board) = board !! index
 
 tupleAdjuster1 :: ([Int], [Int], Int, Int, Int, Int) -> Int -> ([Int], [Int], Int, Int, Int) -- stonecounter index
-tupleAdjuster1 (p1Board, p2Board, p1Box, _, _, whoseTurn) p2Box = (p1Board, p2Board, p1Box, p2Box, whoseTurn)
+tupleAdjuster1 (p1B, p2B, p1bx, _, _, whoseTurn) p2bx = (p1B, p2B, p1bx, p2bx, whoseTurn)
 
 tupleAdjuster2 :: ([Int], [Int], Int, Int, Int, Int) -> Int -> ([Int], [Int], Int, Int, Int)
-tupleAdjuster2 (p2Board, p1Board, p2Box, _, _, whoseTurn) p1Box = (p1Board, p2Board, p1Box, p2Box, whoseTurn)
+tupleAdjuster2 (p2B, p1B, p2bx, _, _, whoseTurn) p1bx = (p1B, p2B, p1bx, p2bx, whoseTurn)
 
 distStonesP1 :: ([Int], [Int], Int, Int, Int, Int) -> ([Int], [Int], Int ,Int, Int, Int) --p1board p2board p1box, stoneCount, index, whoseTurn
-distStonesP1 (p1Board, p2Board, p1Box, stoneCount, index, whoseTurn)
-    = tupleAdjuster''(distribute ((take index p1Board ++ [1] ++ drop (index + 1) p1Board) ++ [p1Box] ++ p2Board, index, 1, stoneCount))
+distStonesP1 (p1B, p2B, p1bx, stoneCount, index, whoseTurn)
+    = tupleAdjuster'' (distribute (take index p1B ++ [1] ++ drop (index + 1) p1B ++ [p1bx] ++ p2B, index + 1, 1, stoneCount - 1))
 
 distStonesP2 :: ([Int], [Int], Int, Int, Int, Int) -> ([Int], [Int], Int ,Int, Int, Int) --p2board p1board p2box, stoneCount, index, whoseTurn
-distStonesP2 (p2Board, p1Board, p2Box, stoneCount, index, whoseTrun)
-    = tupleAdjuster''(distribute ((take index p2Board ++ [1] ++ drop (index + 1) p2Board) ++ [p2Box] ++ p1Board, index, 2, stoneCount))
+distStonesP2 (p2B, p1B, p2bx, stoneCount, index, whoseTurn)
+    = tupleAdjuster'' (distribute (take index p2B ++ [1] ++ drop (index + 1) p2B ++ [p2bx] ++ p1B, index + 1, 2, stoneCount - 1))
 
 tupleAdjuster'' :: ([Int], Int, Int, Int) -> ([Int], [Int], Int ,Int, Int, Int) -- distStones1 -
 tupleAdjuster'' (concatList, index, whoseTurn, stoneCount) = (take 6 concatList, drop 7 concatList, concatList !! 6, stoneCount, index, whoseTurn)
 
-
 distribute :: ([Int], Int, Int, Int) -> ([Int], Int, Int, Int)  -- concatenated list, index, whoseTurn, stoneCount
 distribute (list, index, whoseTurn, stoneCount)
-    | stoneCount == 1 = (first(peekLastStone (list, index, whoseTurn)), second(peekLastStone (list, index, whoseTurn)), third(peekLastStone (list, index, whoseTurn)), stoneCount) -- concat list, index, whoseTurn
-    | otherwise = distribute(take index list ++ [(list !! index) + 1] ++ drop (index + 1) list, index + 1, whoseTurn, stoneCount - 1)
+    | stoneCount == 1 = (first (peekLastStone (list, index, whoseTurn)), second (peekLastStone (list, index, whoseTurn)), third (peekLastStone (list, index, whoseTurn)), stoneCount) -- concat list, index, whoseTurn
+    | otherwise = distribute (take index list ++ [(list !! index) + 1] ++ drop (index + 1) list, (index + 1 ) `mod` 13, whoseTurn, stoneCount - 1)
         
 peekLastStone :: ([Int], Int, Int) -> ([Int], Int, Int) -- concat list, index, whoseTurn
 peekLastStone (list, index, whoseTurn) 
     | index < 6 = if list !! index == 0 -- our last piece came to an empty hole
         then if b  == 0 -- opposing hole is also empty
             then (take index list ++ [1] ++ drop (index + 1) list, index, d) 
-            else (take 6 list ++ [a + b] ++ take (5 - index) c ++ [0] ++ drop (6 - index) c, index, d) -- opposing hole isn't empty
-        else (take index list ++ [a + 1] ++ drop (index + 1) list, index, d) -- OUR hole wasn't empty anyway
-    | index == 6 = (take 6 list ++ [a + b] ++ c, index, e)
+            else (take 6 list ++ [a + b + 1] ++ take (5 - index) c ++ [0] ++ drop (6 - index) c, index, d) -- opposing hole isn't empty
+        else (take index list ++ [f + 1] ++ drop (index + 1) list, index, d) -- OUR hole wasn't empty anyway
+    | index == 6 = (take 6 list ++ [a + 1] ++ c, index, e)
     | otherwise = (take index list ++ [f + 1] ++ drop (index + 1) list, index, d) 
-
     where 
         a = list !! 6 -- current box #stones
         b = list !! (12 - index) -- opposing box #stones
@@ -98,10 +105,20 @@ second (_, y, _) = y
 third :: (a, b, c) -> c  
 third (_, _, z) = z  
 
+printBoard :: [Int] -> [Int] -> Int -> Int -> IO ()
+printBoard p1B p2B p1bx p2bx = do
+    putStrLn ("P2 Box: " ++ show p2bx)
+    putStrLn (intercalate " | " (map show (reverse p2B)))
+    putStrLn (intercalate " | " (map show p1B))
+    putStrLn ("P1 Box: " ++ show p1bx ++ "\n")
+
 main :: IO ()
-main = putStrLn "Hello, Haskell :)BbB!"
--- dist stones (player1 and 2 seperately)
-    -- peekLastStone, displayBoard
--- a logic to keep turns
+main = do
+    putStrLn "Which player starts the game?"
+    input <- getLine 
+    let playerInitial = read input :: Int 
+    
+    _ <- game (p1Board, p2Board, p1Box, p2Box, playerInitial)
 -- isGameOver check both players' holes
 -- emptyBoard (isgameover calls it in case of a winner)
+    return ()
