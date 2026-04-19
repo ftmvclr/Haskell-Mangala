@@ -11,12 +11,13 @@ p2Box :: Int
 p2Box = 0
 
 game :: ([Int], [Int], Int, Int, Int) -> ([Int], [Int], Int ,Int, Int) --p1board p2board p1box p2Box, whoseTurn
-game p1Board p2Board p1Box p2Box whoseTurn = do
+game (p1Board, p2Board, p1Box, p2Box, whoseTurn) = do
     putStrLn $"Player {whoseTurn} enter hole number (1-6):"
     input <- getLine 
     let hole = read input :: Int 
     putStrLn ("You selected hole: " ++ show hole)
 -- first things first
+-
     if whoseTurn == 1 
         then 
             if peekPlayersBoard (index, p1board) == 1
@@ -53,12 +54,16 @@ tupleAdjuster2 :: ([Int], [Int], Int, Int, Int, Int) -> Int -> ([Int], [Int], In
 tupleAdjuster2 (p2Board, p1Board, p2Box, _, _, whoseTurn) p1Box = (p1Board, p2Board, p1Box, p2Box, whoseTurn)
 
 distStonesP1 :: ([Int], [Int], Int, Int, Int, Int) -> ([Int], [Int], Int ,Int, Int, Int) --p1board p2board p1box, stoneCount, index, whoseTurn
-distStonesP1 (p1Board, p2Board, p1Box, stoneCount, index)
-    = distribute ((take index p1Board ++ [1] ++ drop (index + 1) p1Board) ++ p1Box ++ p2Board, index, 1, stoneCount)
+distStonesP1 (p1Board, p2Board, p1Box, stoneCount, index, whoseTurn)
+    = tupleAdjuster''(distribute ((take index p1Board ++ [1] ++ drop (index + 1) p1Board) ++ [p1Box] ++ p2Board, index, 1, stoneCount))
 
 distStonesP2 :: ([Int], [Int], Int, Int, Int, Int) -> ([Int], [Int], Int ,Int, Int, Int) --p2board p1board p2box, stoneCount, index, whoseTurn
-distStonesP2 (p2Board, p1Board, p2Box, stoneCount, index)
-    = distribute ((take index p2Board ++ [1] ++ drop (index + 1) p2Board) ++ p2Box ++ p1Board, index, 2, stoneCount)
+distStonesP2 (p2Board, p1Board, p2Box, stoneCount, index, whoseTrun)
+    = tupleAdjuster''(distribute ((take index p2Board ++ [1] ++ drop (index + 1) p2Board) ++ [p2Box] ++ p1Board, index, 2, stoneCount))
+
+tupleAdjuster'' :: ([Int], Int, Int, Int) -> ([Int], [Int], Int ,Int, Int, Int) -- distStones1 -
+tupleAdjuster'' (concatList, index, whoseTurn, stoneCount) = (take 6 concatList, drop 7 concatList, concatList !! 6, stoneCount, index, whoseTurn)
+
 
 distribute :: ([Int], Int, Int, Int) -> ([Int], Int, Int, Int)  -- concatenated list, index, whoseTurn, stoneCount
 distribute (list, index, whoseTurn, stoneCount)
