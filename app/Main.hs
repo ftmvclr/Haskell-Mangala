@@ -19,23 +19,30 @@ game p1board p2board p1box p2Box whoseTurn = do
 -- first things first
     if whoseTurn == 1 
         then 
-            if (peekPlayersBoard hole p1board) == 1
+            if (peekPlayersBoard (hole, p1board)) == 1
                 then handleCase1 -- TODO function
                 else distStonesP1 p1Board p2Board p1Box (peekPlayersBoard hole p1board) hole
         else 
-            if (peekPlayersBoard hole p2board) == 1
+            if (peekPlayersBoard (hole, p1board)) == 1
                 then handleCase1 -- TODO function
                 else distStonesP2 p2Board p1Board p2Box (peekPlayersBoard hole p2board) hole
+    
 
-distStonesP1 :: ([Int], [Int], Int, Int, Int) -> ([Int], [Int], Int ,Int, Int) --p1board p2board p1box, stoneCount, index
-distStonesP1 p1Board p2Board p1Box x
-    |x == 0 = peekLastStone
-    |otherwise = distribute 
+distStonesP1 :: ([Int], [Int], Int, Int, Int) -> ([Int], [Int], Int ,Int, Int,) --p1board p2board p1box, stoneCount, index
+distStonesP1 (p1Board, p2Board, p1Box, stoneCount, index)
+    |stoneCount == 0 = peekLastStone
+    |otherwise = distribute (p1Board ++ p1Box ++ p2Board, stoneCount, index)
 
 peekPlayersBoard :: Int -> [Int] -> Int-- index, board
-    peekPlayersBoard index board = board !! (index+1)
+peekPlayersBoard index board = board !! (index+1)
 
-distribute :: ([Int], Int, Int) -> ([Int], Int, Int)  -- concatenated list, stonecount index
+distribute :: ([Int], Int, Int) -> ([Int], Int, Int)  -- concatenated list, stoneCount index
+distribute (list, stoneCount, index)
+    | stoneCount == 1 = peekLastStone
+    | otherwise = distribute(take index board ++ [(list !! index) + 1] ++ drop (index + 1) board, stoneCount - 1, index + 1)
+        
+peekLastStone :: ([Int], Int) -> ([Int], Int)
+peekLastStone 
 main :: IO ()
 main = putStrLn "Hello, Haskell :)BbB!"
 -- dist stones (player1 and 2 seperately)
