@@ -22,24 +22,32 @@ game (p1B, p2B, p1bx, p2bx, whoseTurn) = do
 -- first things first
 
     let index = hole - 1
-
-    if whoseTurn == 1 
-        then 
-            if peekPlayersBoard (index, p1B) == 1
-                then game (tupleAdjuster1' (handle1StoneCase1 (p1B, p2B, p1bx, index)) p2bx)
-                else game (tupleAdjuster1 (distStonesP1 (p1B, p2B, p1bx, peekPlayersBoard (index, p1B), index, whoseTurn)) p2bx)
-        else 
-            if peekPlayersBoard (index, p2B) == 1
-                then game (tupleAdjuster2' (handle1StoneCase2 (p2B, p1B, p2bx, index)) p1bx)
-                else game (tupleAdjuster2 (distStonesP2 (p2B, p1B, p2bx, peekPlayersBoard (index, p2B), index, whoseTurn)) p1bx)
-    isGameOver p1B p2B 
+    if isGameOver p1B p2B
+        then winningMove p1B p2B p1bx p2bx
+        else    
+            if whoseTurn == 1 
+                then 
+                    if peekPlayersBoard (index, p1B) == 1
+                        then game (tupleAdjuster1' (handle1StoneCase1 (p1B, p2B, p1bx, index)) p2bx)
+                        else game (tupleAdjuster1 (distStonesP1 (p1B, p2B, p1bx, peekPlayersBoard (index, p1B), index, whoseTurn)) p2bx)
+                    else 
+                        if peekPlayersBoard (index, p2B) == 1
+                            then game (tupleAdjuster2' (handle1StoneCase2 (p2B, p1B, p2bx, index)) p1bx)
+                            else game (tupleAdjuster2 (distStonesP2 (p2B, p1B, p2bx, peekPlayersBoard (index, p2B), index, whoseTurn)) p1bx)
 
 isGameOver :: [Int] -> [Int] -> Bool
-isGameOver p1B p2B = 
-    if sum p1B == 0
-        then
-    else
-    if 
+isGameOver p1B p2B = sum p1B == 0 || sum p2B == 0
+
+winningMove :: [Int] -> [Int] -> Int -> Int -> IO ([Int], [Int], Int, Int, Int) 
+winningMove p1B p2B p1bx p2bx 
+    | score1 == score2 = putStrLn $ "It's a draw! with the score: " ++ show score1 
+    | score2 > score1  = putStrLn $ "Player 2 won, congratulations with the score: " ++ show score2 ++ " : " ++ show score1 
+    | otherwise        = putStrLn $ "Player 1 won, congratulations with the score: " ++ show score1 ++ " : " ++ show score2 
+    where 
+        p1Holes = sum p1B
+        p2Holes = sum p2B
+        score1 = if p1Holes == 0 then p1bx + p2Holes else p1bx
+        score2 = if p2Holes == 0 then p2bx + p1Holes else p2bx
 
 tupleAdjuster1' :: ([Int], Int, Int) -> Int -> ([Int], [Int], Int, Int, Int)
 tupleAdjuster1' (concatList, index, whoseTurn) p2bx = (take 6 concatList, drop 7 concatList, concatList !! 6, p2bx, whoseTurn)
