@@ -11,7 +11,7 @@ p2Box :: Int
 p2Box = 0
 
 game :: ([Int], [Int], Int, Int, Int) -> ([Int], [Int], Int ,Int, Int) --p1board p2board p1box p2Box, whoseTurn
-game p1board p2board p1box p2Box whoseTurn = do
+game p1Board p2Board p1Box p2Box whoseTurn = do
     putStrLn $"Player {whoseTurn} enter hole number (1-6):"
     input <- getLine 
     let hole = read input :: Int 
@@ -20,15 +20,27 @@ game p1board p2board p1box p2Box whoseTurn = do
     if whoseTurn == 1 
         then 
             if peekPlayersBoard (index, p1board) == 1
-                then handle1StoneCase -- TODO function
+                then game(tupleAdjuster1'(handle1StoneCase1 p1Board ++ p1Box ++ p2Board index whoseTurn) hole whoseTurn )
                 else game (tupleAdjuster1 (distStonesP1 p1Board p2Board p1Box (peekPlayersBoard index p1board) hole whoseTurn) p2Box)
         else 
             if peekPlayersBoard (index, p2board) == 1
-                then handle1StoneCase -- TODO function
+                then game(tupleAdjuster2'(handle1StoneCase2 (p2Board p1Board p2Box index) index whoseTurn p1Box))
                 else game (tupleAdjuster2 (distStonesP2 p2Board p1Board p2Box (peekPlayersBoard index p2board) hole whoseTurn) p1Box)
     where 
         index = hole - 1
-    
+
+tupleAdjuster1' :: ([Int], Int, Int) -> Int -> ([Int], [Int], Int, Int, Int)
+tupleAdjuster1' (concatList, _, whoseTurn) p2Box = (take 6 concatList, drop 7 concatList, concatList !! 6, p2Box, whoseTurn)
+
+tupleAdjuster2' :: ([Int], Int, Int) -> Int -> ([Int], [Int], Int, Int, Int)
+tupleAdjuster2' (concatList, _, whoseTurn) p1Box = ( drop 7 concatList, take 6 concatList, p1Box, concatList !! 6, whoseTurn)
+
+handle1StoneCase1 :: ([Int], [Int], Int, Int) -> ([Int], Int, Int)
+handle1StoneCase1 (p1Board, p2Board, p1Box, index) = peekLastStone (p1Board ++ [p1Box] ++ p2Board, index, 1)
+
+handle1StoneCase2 :: ([Int], Int, Int) -> ([Int], Int, Int)
+handle1StoneCase2 =  peekLastStone
+
 peekPlayersBoard :: (Int, [Int]) -> Int
 peekPlayersBoard (index, board) = board !! index
 
@@ -70,7 +82,6 @@ peekLastStone (list, index, whoseTurn)
         e = if whoseTurn == 1 then 1 else 2 
         f = list !! index
 
-handle1StoneCase 
 main :: IO ()
 main = putStrLn "Hello, Haskell :)BbB!"
 -- dist stones (player1 and 2 seperately)
