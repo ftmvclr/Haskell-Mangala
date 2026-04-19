@@ -12,37 +12,41 @@ p2Box = 0
 
 game :: ([Int], [Int], Int, Int, Int) -> IO ([Int], [Int], Int ,Int, Int) --p1board p2board p1box p2Box, whoseTurn
 game (p1B, p2B, p1bx, p2bx, whoseTurn) = do
-    putStrLn "\n--- CURRENT BOARD ---"
-    printBoard p1B p2B p1bx p2bx
-    
-    putStrLn ("Player " ++ show whoseTurn ++ " enter hole number (1-6):")
-    input <- getLine 
-    let hole = read input :: Int 
-    putStrLn ("You selected hole: " ++ show hole)
--- first things first
-
-    let index = hole - 1
     if isGameOver p1B p2B
         then winningMove p1B p2B p1bx p2bx
-        else    
+        else do
+            putStrLn "\n--- CURRENT BOARD ---"
+            printBoard p1B p2B p1bx p2bx
+            
+            putStrLn ("Player " ++ show whoseTurn ++ " enter hole number (1-6):")
+            input <- getLine 
+            let hole = read input :: Int 
+            putStrLn ("You selected hole: " ++ show hole)
+            let index = hole - 1            
             if whoseTurn == 1 
                 then 
                     if peekPlayersBoard (index, p1B) == 1
                         then game (tupleAdjuster1' (handle1StoneCase1 (p1B, p2B, p1bx, index)) p2bx)
                         else game (tupleAdjuster1 (distStonesP1 (p1B, p2B, p1bx, peekPlayersBoard (index, p1B), index, whoseTurn)) p2bx)
-                    else 
-                        if peekPlayersBoard (index, p2B) == 1
-                            then game (tupleAdjuster2' (handle1StoneCase2 (p2B, p1B, p2bx, index)) p1bx)
-                            else game (tupleAdjuster2 (distStonesP2 (p2B, p1B, p2bx, peekPlayersBoard (index, p2B), index, whoseTurn)) p1bx)
-
+                else 
+                    if peekPlayersBoard (index, p2B) == 1
+                        then game (tupleAdjuster2' (handle1StoneCase2 (p2B, p1B, p2bx, index)) p1bx)
+                        else game (tupleAdjuster2 (distStonesP2 (p2B, p1B, p2bx, peekPlayersBoard (index, p2B), index, whoseTurn)) p1bx)
 isGameOver :: [Int] -> [Int] -> Bool
 isGameOver p1B p2B = sum p1B == 0 || sum p2B == 0
 
 winningMove :: [Int] -> [Int] -> Int -> Int -> IO ([Int], [Int], Int, Int, Int) 
 winningMove p1B p2B p1bx p2bx 
-    | score1 == score2 = putStrLn $ "It's a draw! with the score: " ++ show score1 
-    | score2 > score1  = putStrLn $ "Player 2 won, congratulations with the score: " ++ show score2 ++ " : " ++ show score1 
-    | otherwise        = putStrLn $ "Player 1 won, congratulations with the score: " ++ show score1 ++ " : " ++ show score2 
+    | score1 == score2 = do
+        putStrLn $ "It's a draw! with the score: " ++ show score1 
+        -- Hand back the final state so the compiler is happy
+        return (p1B, p2B, score1, score2, 0) 
+    | score2 > score1  = do
+        putStrLn $ "Player 2 won, congratulations with the score: " ++ show score2 ++ " : " ++ show score1 
+        return (p1B, p2B, score1, score2, 0)
+    | otherwise        = do
+        putStrLn $ "Player 1 won, congratulations with the score: " ++ show score1 ++ " : " ++ show score2 
+        return (p1B, p2B, score1, score2, 0)
     where 
         p1Holes = sum p1B
         p2Holes = sum p2B
