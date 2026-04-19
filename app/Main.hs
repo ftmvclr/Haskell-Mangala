@@ -20,26 +20,28 @@ game p1Board p2Board p1Box p2Box whoseTurn = do
     if whoseTurn == 1 
         then 
             if peekPlayersBoard (index, p1board) == 1
-                then game(tupleAdjuster1'(handle1StoneCase1 p1Board ++ p1Box ++ p2Board index whoseTurn) hole whoseTurn )
+                then game(tupleAdjuster1'(handle1StoneCase1 (p1Board, p2Board, p1Box, index) p2Box))
+
                 else game (tupleAdjuster1 (distStonesP1 p1Board p2Board p1Box (peekPlayersBoard index p1board) hole whoseTurn) p2Box)
         else 
             if peekPlayersBoard (index, p2board) == 1
-                then game(tupleAdjuster2'(handle1StoneCase2 (p2Board p1Board p2Box index) index whoseTurn p1Box))
+                then game(tupleAdjuster2'(handle1StoneCase2 (p2Board, p1Board, p2Box, index) p1Box))
+
                 else game (tupleAdjuster2 (distStonesP2 p2Board p1Board p2Box (peekPlayersBoard index p2board) hole whoseTurn) p1Box)
     where 
         index = hole - 1
 
 tupleAdjuster1' :: ([Int], Int, Int) -> Int -> ([Int], [Int], Int, Int, Int)
-tupleAdjuster1' (concatList, _, whoseTurn) p2Box = (take 6 concatList, drop 7 concatList, concatList !! 6, p2Box, whoseTurn)
+tupleAdjuster1' (concatList, index, whoseTurn) p2Box = (take 6 concatList, drop 7 concatList, concatList !! 6, p2Box, whoseTurn)
 
 tupleAdjuster2' :: ([Int], Int, Int) -> Int -> ([Int], [Int], Int, Int, Int)
-tupleAdjuster2' (concatList, _, whoseTurn) p1Box = ( drop 7 concatList, take 6 concatList, p1Box, concatList !! 6, whoseTurn)
+tupleAdjuster2' (concatList, index, whoseTurn) p1Box = ( drop 7 concatList, take 6 concatList, p1Box, concatList !! 6, whoseTurn)
 
 handle1StoneCase1 :: ([Int], [Int], Int, Int) -> ([Int], Int, Int)
 handle1StoneCase1 (p1Board, p2Board, p1Box, index) = peekLastStone (p1Board ++ [p1Box] ++ p2Board, index, 1)
 
-handle1StoneCase2 :: ([Int], Int, Int) -> ([Int], Int, Int)
-handle1StoneCase2 =  peekLastStone
+handle1StoneCase2 :: ([Int], [Int], Int, Int) -> ([Int], Int, Int) --concatlist index whose
+handle1StoneCase2 (p2Board, p1Board, p2Box, index) = peekLastStone (p2Board ++ [p2Box] ++ p1Board, index, 2)
 
 peekPlayersBoard :: (Int, [Int]) -> Int
 peekPlayersBoard (index, board) = board !! index
@@ -52,16 +54,16 @@ tupleAdjuster2 (p2Board, p1Board, p2Box, _, _, whoseTurn) p1Box = (p1Board, p2Bo
 
 distStonesP1 :: ([Int], [Int], Int, Int, Int, Int) -> ([Int], [Int], Int ,Int, Int, Int) --p1board p2board p1box, stoneCount, index, whoseTurn
 distStonesP1 (p1Board, p2Board, p1Box, stoneCount, index)
-    = distribute ((take index p1Board ++ [1] ++ drop (index + 1) p1Board) ++ p1Box ++ p2Board, stoneCount, index)
+    = distribute ((take index p1Board ++ [1] ++ drop (index + 1) p1Board) ++ p1Box ++ p2Board, index, 1, stoneCount)
 
 distStonesP2 :: ([Int], [Int], Int, Int, Int, Int) -> ([Int], [Int], Int ,Int, Int, Int) --p2board p1board p2box, stoneCount, index, whoseTurn
 distStonesP2 (p2Board, p1Board, p2Box, stoneCount, index)
-    = distribute ((take index p2Board ++ [1] ++ drop (index + 1) p2Board) ++ p2Box ++ p1Board, stoneCount, index)
+    = distribute ((take index p2Board ++ [1] ++ drop (index + 1) p2Board) ++ p2Box ++ p1Board, index, 2, stoneCount)
 
-distribute :: ([Int], Int, Int, Int) -> ([Int], Int, Int, Int)  -- concatenated list, stoneCount, index, whoseTurn
-distribute (list, stoneCount, index)
-    | stoneCount == 1 = peekLastStone
-    | otherwise = distribute(take index list ++ [(list !! index) + 1] ++ drop (index + 1) list, stoneCount - 1, index + 1)
+distribute :: ([Int], Int, Int, Int) -> ([Int], Int, Int, Int)  -- concatenated list, index, whoseTurn, stoneCount
+distribute (list, index, whoseTurn, stoneCount)
+    | stoneCount == 1 = (first(peekLastStone (list, index, whoseTurn)), second(peekLastStone (list, index, whoseTurn)), third(peekLastStone (list, index, whoseTurn)), stoneCount) -- concat list, index, whoseTurn
+    | otherwise = distribute(take index list ++ [(list !! index) + 1] ++ drop (index + 1) list, index + 1, whoseTurn, stoneCount - 1)
         
 peekLastStone :: ([Int], Int, Int) -> ([Int], Int, Int) -- concat list, index, whoseTurn
 peekLastStone (list, index, whoseTurn) 
@@ -81,6 +83,15 @@ peekLastStone (list, index, whoseTurn)
         d = if whoseTurn == 1 then 2 else 1 
         e = if whoseTurn == 1 then 1 else 2 
         f = list !! index
+
+first :: (a, b, c) -> a  
+first (x, _, _) = x  
+  
+second :: (a, b, c) -> b  
+second (_, y, _) = y  
+  
+third :: (a, b, c) -> c  
+third (_, _, z) = z  
 
 main :: IO ()
 main = putStrLn "Hello, Haskell :)BbB!"
