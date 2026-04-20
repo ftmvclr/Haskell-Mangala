@@ -21,17 +21,21 @@ game (p1B, p2B, p1bx, p2bx, whoseTurn) = do
             putStrLn ("Player " ++ show whoseTurn ++ " enter hole number (1-6):")
             input <- getLine 
             let hole = read input :: Int 
-            putStrLn ("You selected hole: " ++ show hole)
-            let index = hole - 1            
-            if whoseTurn == 1 
-                then 
-                    if peekPlayersBoard (index, p1B) == 1
-                        then game (tupleAdjuster1' (handle1StoneCase1 (p1B, p2B, p1bx, index)) p2bx)
-                        else game (tupleAdjuster1 (distStonesP1 (p1B, p2B, p1bx, peekPlayersBoard (index, p1B), index, whoseTurn)) p2bx)
-                else 
-                    if peekPlayersBoard (index, p2B) == 1
-                        then game (tupleAdjuster2' (handle1StoneCase2 (p2B, p1B, p2bx, index)) p1bx)
-                        else game (tupleAdjuster2 (distStonesP2 (p2B, p1B, p2bx, peekPlayersBoard (index, p2B), index, whoseTurn)) p1bx)
+			if hole > 6 
+                then error "INVALID INPUT"
+				else
+            			putStrLn ("You selected hole: " ++ show hole)
+            		let index = hole - 1            
+            		if whoseTurn == 1 
+                		then 
+                    		if peekPlayersBoard (index, p1B) == 1
+                        		then game (tupleAdjuster1' (handle1StoneCase1 (p1B, p2B, p1bx, index)) p2bx)
+                        		else game (tupleAdjuster1 (distStonesP1 (p1B, p2B, p1bx, peekPlayersBoard (index, p1B), index, whoseTurn)) p2bx)
+                		else 
+                    		if peekPlayersBoard (index, p2B) == 1
+                        		then game (tupleAdjuster2' (handle1StoneCase2 (p2B, p1B, p2bx, index)) p1bx)
+                        		else game (tupleAdjuster2 (distStonesP2 (p2B, p1B, p2bx, peekPlayersBoard (index, p2B), index, whoseTurn)) p1bx)
+
 isGameOver :: [Int] -> [Int] -> Bool
 isGameOver p1B p2B = sum p1B == 0 || sum p2B == 0
 
@@ -39,7 +43,6 @@ winningMove :: [Int] -> [Int] -> Int -> Int -> IO ([Int], [Int], Int, Int, Int)
 winningMove p1B p2B p1bx p2bx 
     | score1 == score2 = do
         putStrLn $ "It's a draw! with the score: " ++ show score1 
-        -- Hand back the final state so the compiler is happy
         return (p1B, p2B, score1, score2, 0) 
     | score2 > score1  = do
         putStrLn $ "Player 2 won, congratulations with the score: " ++ show score2 ++ " : " ++ show score1 
@@ -131,6 +134,5 @@ main = do
     let playerInitial = read input :: Int 
     
     _ <- game (p1Board, p2Board, p1Box, p2Box, playerInitial)
--- isGameOver check both players' holes
--- emptyBoard (isgameover calls it in case of a winner)
+
     return ()
