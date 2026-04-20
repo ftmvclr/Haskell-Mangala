@@ -21,20 +21,31 @@ game (p1B, p2B, p1bx, p2bx, whoseTurn) = do
             putStrLn ("Player " ++ show whoseTurn ++ " enter hole number (1-6):")
             input <- getLine 
             let hole = read input :: Int 
-			if hole > 6 
+            
+            if hole > 6 
                 then error "INVALID INPUT"
-				else
-            			putStrLn ("You selected hole: " ++ show hole)
-            		let index = hole - 1            
-            		if whoseTurn == 1 
-                		then 
-                    		if peekPlayersBoard (index, p1B) == 1
-                        		then game (tupleAdjuster1' (handle1StoneCase1 (p1B, p2B, p1bx, index)) p2bx)
-                        		else game (tupleAdjuster1 (distStonesP1 (p1B, p2B, p1bx, peekPlayersBoard (index, p1B), index, whoseTurn)) p2bx)
-                		else 
-                    		if peekPlayersBoard (index, p2B) == 1
-                        		then game (tupleAdjuster2' (handle1StoneCase2 (p2B, p1B, p2bx, index)) p1bx)
-                        		else game (tupleAdjuster2 (distStonesP2 (p2B, p1B, p2bx, peekPlayersBoard (index, p2B), index, whoseTurn)) p1bx)
+                else do
+                    putStrLn ("You selected hole: " ++ show hole)
+                    let index = hole - 1            
+                    
+                    if whoseTurn == 1 
+                        then do
+                            if peekPlayersBoard (index, p1B) == 0
+                                then do
+                                    putStrLn "EMPTY HOLE."
+                                    game (p1B, p2B, p1bx, p2bx, 1)
+                                else if peekPlayersBoard (index, p1B) == 1
+                                    then game (tupleAdjuster1' (handle1StoneCase1 (p1B, p2B, p1bx, index)) p2bx)
+                                    else game (tupleAdjuster1 (distStonesP1 (p1B, p2B, p1bx, peekPlayersBoard (index, p1B), index, whoseTurn)) p2bx)
+                        else do
+                            if peekPlayersBoard (index, p2B) == 0
+                                then do
+                                    putStrLn "EMPTY HOLE."
+                                    game (p1B, p2B, p1bx, p2bx, 2)
+                                else if peekPlayersBoard (index, p2B) == 1
+                                    then game (tupleAdjuster2' (handle1StoneCase2 (p2B, p1B, p2bx, index)) p1bx)
+                                    else game (tupleAdjuster2 (distStonesP2 (p2B, p1B, p2bx, peekPlayersBoard (index, p2B), index, whoseTurn)) p1bx)
+
 
 isGameOver :: [Int] -> [Int] -> Bool
 isGameOver p1B p2B = sum p1B == 0 || sum p2B == 0
