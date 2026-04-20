@@ -23,12 +23,12 @@ game (p1B, p2B, p1bx, p2bx, whoseTurn) = do
             let hole = read input :: Int 
             
             if hole > 6 
-                then error "INVALID INPUT"
+                then error "INVALID INPUT" 
                 else do
                     putStrLn ("You selected hole: " ++ show hole)
                     let index = hole - 1            
                     
-                    if whoseTurn == 1 
+                    if whoseTurn == 1 -- P1
                         then do
                             if peekPlayersBoard (index, p1B) == 0
                                 then do
